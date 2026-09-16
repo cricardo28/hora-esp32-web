@@ -2,9 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<􀆟tle>Leituras ESP32</􀆟tle>
-<script src="h􀆩ps://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="h􀆩ps://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<title>Leituras ESP32</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
 <h2>Últimas Leituras do ESP32</h2>
@@ -20,7 +20,7 @@ storageBucket: "horaesp32.appspot.com",
 messagingSenderId: "xxxx",
 appId: "xxxx"
 };
-firebase.ini􀆟alizeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 // Lê últimas 10 leituras
 db.ref("leituras").limitToLast(10).on("value", (snapshot) => {
