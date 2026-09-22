@@ -24,7 +24,7 @@ appId: "xxxx"
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 // Lê últimas 10 leituras
-db.ref("leituras").limitToLast(10).on("value", (snapshot) => {
+db.ref("leituras").limitToLast(500).on("value", (snapshot) => {
 const lista = document.getElementById("leituras");
 lista.innerHTML = "";
 snapshot.forEach((child) => {
