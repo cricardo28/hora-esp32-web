@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leituras ESP32 - Painel de Monitoramento</title>
+    script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         /* Estilização Geral e Cores Globais */
         :root {
@@ -132,6 +134,7 @@
         <p>Coordenadas e timestamp sincronizados em tempo real com o banco de dados.</p>
 
         <div class="table-responsive">
+          <ul id="leituras"></ul>
             <table>
                 <thead>
                     <tr>
@@ -141,7 +144,7 @@
                         <th>Peso (kg)</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-corpo">
+                <tbody id="leituras">
                     <tr>
                         <td colspan="4" class="loading-text">Conectando ao Firebase e carregando histórico...</td>
                     </tr>
