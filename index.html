@@ -146,7 +146,7 @@
         </div>
     </div>
 
-    <script>
+ <script>
         // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "uAJHpxPhOs8tGoih7TQXEbbpOYW7mnWsLUtNRcuG",
@@ -177,48 +177,36 @@
 
             const dados = snapshot.val();
 
-            // CASO 1: Se o ESP32 envia registros com IDs gerados por push() ou chaves compostas
-            if (typeof Object.values(dados)[0] === 'object' && !('hora' in dados)) {
-                snapshot.forEach((childSnapshot) => {
-                    const dado = childSnapshot.val();
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${dado.hora ?? '-'}</td>
-                        <td>${dado.latitude ?? '-'}</td>
-                        <td>${dado.longitude ?? '-'}</td>
-                        <td>${dado.peso ?? '-'}</td>
-                    `;
-                    tbody.prepend(tr);
-                });
-            } 
-            // CASO 2: Estrutura em sub-nós paralelos (hora, latitude, longitude, peso)
-            else {
-                const chaves = dados.hora ? Object.keys(dados.hora) : [];
+            // Extrai as listas de valores de cada sub-nó em ordem
+            const horas = dados.hora ? Object.values(dados.hora) : [];
+            const lats = dados.latitude ? Object.values(dados.latitude) : [];
+            const longs = dados.longitude ? Object.values(dados.longitude) : [];
+            const pesos = dados.peso ? Object.values(dados.peso) : [];
 
-                if (chaves.length === 0) {
-                    // Exibe a leitura direta se os valores forem simples/únicos
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${typeof dados.hora === 'object' ? '-' : (dados.hora ?? '-')}</td>
-                        <td>${typeof dados.latitude === 'object' ? '-' : (dados.latitude ?? '-')}</td>
-                        <td>${typeof dados.longitude === 'object' ? '-' : (dados.longitude ?? '-')}</td>
-                        <td>${typeof dados.peso === 'object' ? '-' : (dados.peso ?? '-')}</td>
-                    `;
-                    tbody.appendChild(tr);
-                    return;
-                }
+            // Identifica o total de linhas com base no nó com mais dados
+            const total = Math.max(horas.length, lats.length, longs.length, pesos.length);
 
-                // Itera sobre as chaves dos registros encadeados
-                chaves.forEach((chave) => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${dados.hora ? (dados.hora[chave] ?? '-') : '-'}</td>
-                        <td>${dados.latitude ? (dados.latitude[chave] ?? '-') : '-'}</td>
-                        <td>${dados.longitude ? (dados.longitude[chave] ?? '-') : '-'}</td>
-                        <td>${dados.peso ? (dados.peso[chave] ?? '-') : '-'}</td>
-                    `;
-                    tbody.prepend(tr);
-                });
+            if (total === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="loading-text">Nenhum dado cadastrado.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Monte a tabela combinando as posições equivalentes de cada lista
+            for (let i = 0; i < total; i++) {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${horas[i] ?? '-'}</td>
+                    <td>${lats[i] ?? '-'}</td>
+                    <td>${longs[i] ?? '-'}</td>
+                    <td>${pesos[i] ?? '-'}</td>
+                `;
+                
+                // Adiciona no topo da tabela (mais recentes primeiro)
+                tbody.prepend(tr);
             }
         });
     </script>
