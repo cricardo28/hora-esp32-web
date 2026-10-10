@@ -134,7 +134,6 @@
         <p>Coordenadas e timestamp sincronizados em tempo real com o banco de dados.</p>
 
         <div class="table-responsive">
-          <ul id="leituras/peso"></ul>
             <table>
                 <thead>
                     <tr>
@@ -170,16 +169,45 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        
         // Lê últimas 10 leituras
-        db.ref("leituras").limitToLast(500).on("value", (snapshot) => {
-        const lista = document.getElementById("leituras");
-        lista.innerHTML = "";
-        snapshot.forEach((child) => {
-        const li = document.createElement("li");
-        li.textContent = child.val();
-        lista.appendChild(li);
-        });
-        });
+       // 1. Seleciona o corpo da tabela pelo ID "leituras"
+const tbody = document.getElementById("leituras");
+
+// 2. Escuta os dados do nó "leituras" no Firebase
+db.ref("leituras").on("value", (snapshot) => {
+  // Limpa o conteúdo atual da tabela (remove "Conectando..." ou leituras antigas)
+  tbody.innerHTML = "";
+
+  // Se não houver dados cadastrados
+  if (!snapshot.exists()) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="loading-text">Nenhum registro encontrado.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  // 3. Percorre cada item/registro dentro de "leituras"
+  snapshot.forEach((childSnapshot) => {
+    const dado = childSnapshot.val();
+
+    // Cria o elemento da linha <tr>
+    const tr = document.createElement("tr");
+
+    // Preenche as celulas <td> com os dados lidos
+    tr.innerHTML = `
+      <td>${dado.hora ?? '-'}</td>
+      <td>${dado.latitude ?? '-'}</td>
+      <td>${dado.longitude ?? '-'}</td>
+      <td>${dado.peso ?? '-'}</td>
+    `;
+
+    // Adiciona a linha no final da tabela
+    tbody.appendChild(tr);
+  });
+});
     </script>
 
 </body>
