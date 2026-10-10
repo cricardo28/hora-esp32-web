@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoramento de Animais - Realtime</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -54,7 +56,7 @@
                 <th>Peso (kg)</th>
             </tr>
         </thead>
-        <tbody id="tabela-dados">
+        <tbody id="leituras">
             <!-- Os dados do ESP32 vão aparecer aqui dentro automaticamente -->
         </tbody>
     </table>
@@ -62,8 +64,8 @@
 
 <!-- 1. IMPORTAÇÃO DOS MÓDULOS DO FIREBASE (V9+) -->
 <script type="module">
-    import { initializeApp } from "https://gstatic.com";
-    import { getDatabase, ref, onValue } from "https://gstatic.com";
+   // import { initializeApp } from "https://gstatic.com";
+    //import { getDatabase, ref, onValue } from "https://gstatic.com";
 
     // 2. CONFIGURAÇÃO DO SEU FIREBASE (Substitua pelos dados do seu projeto)
     const firebaseConfig = {
@@ -73,7 +75,7 @@
         projectId: "horaesp32",
         storageBucket: "horaesp32.appspot.com",
         messagingSenderId: "SEU_SENDER_ID",
-        appId: "SEU_APP_ID"*/
+        appId: "SEU_APP_ID"
     /*
         apiKey: "SUA_API_KEY_DO_FIREBASE",
         authDomain: "://firebaseapp.com",
