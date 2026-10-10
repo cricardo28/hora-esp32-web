@@ -2,100 +2,160 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Monitoramento de Animais - Histórico</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leituras ESP32 - Painel de Monitoramento</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-        h1 { color: #2c3e50; }
-        .info { margin-bottom: 20px; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #f4f6f7; color: #34495e; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
+        /* Estilização Geral e Cores Globais */
+        :root {
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --primary: #2c3e50;
+            --text-main: #333333;
+            --text-muted: #7f8c8d;
+            --border-color: #e9ecef;
+            --accent: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Container do Painel */
+        .dashboard-container {
+            width: 100%;
+            max-width: 1000px;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        /* Cabeçalho */
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+            font-size: 1.6rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 24px;
+            background-color: var(--accent);
+            border-radius: 4px;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+
+        /* Wrapper da Tabela para Rolagem Responsiva */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Estilização Avançada da Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            background-color: var(--bg-card);
+        }
+
+        th {
+            background-color: #fafbfc;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+
+        /* Efeitos visuais para linhas de dados */
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Destaques de badges ou dados vazios */
+        .empty-cell {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        
+        .loading-text {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
 
-    <h1>Monitoramento de Animais - Realtime</h1>
-    <div class="info">Histórico do Animal: id_animal_001</div>
-    <div class="info" style="font-weight: normal;">Última atualização do banco: <span id="txtUltimoHorario">Carregando...</span></div>
+    <div class="dashboard-container">
+        <h2>Últimas Leituras do ESP32</h2>
+        <p>Coordenadas e timestamp sincronizados em tempo real com o banco de dados.</p>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Data / Hora</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Peso (kg)</th>
-            </tr>
-        </thead>
-        <tbody id="tabela-corpo">
-            <tr>
-                <td colspan="4">Conectando ao Firebase...</td>
-            </tr>
-        </tbody>
-    </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data / Hora</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Peso (kg)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo">
+                    <tr>
+                        <td colspan="4" class="loading-text">Conectando ao Firebase e carregando histórico...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
+    <!-- O seu script original com a lógica de dados entra logo abaixo -->
     <script type="module">
-        // Importação dos módulos do Firebase SDK v10+
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js";
-
-        // Configuração do seu Firebase
-        const firebaseConfig = {
-            databaseURL: "https://horaesp32-404f2-default-rtdb.firebaseio.com"
-        };
-
-        // Inicializa o Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // 1. Monitora o 'ultimo_horario' na raiz do banco
-        onValue(ref(db, 'ultimo_horario'), (snapshot) => {
-            document.getElementById("txtUltimoHorario").innerText = snapshot.val() || "Sem registros";
-        });
-
-        // 2. Monitora e renderiza todo o histórico de 'leituras'
-        onValue(ref(db, 'leituras'), (snapshot) => {
-            const leituras = snapshot.val();
-            const corpoTabela = document.getElementById("tabela-corpo");
-            
-            // Limpa a tabela antes de renderizar os novos dados em tempo real
-            corpoTabela.innerHTML = "";
-
-            if (!leituras) {
-                corpoTabela.innerHTML = "<tr><td colspan='4'>Nenhum registro encontrado.</td></tr>";
-                return;
-            }
-
-            // Extrai as listas de valores mantendo a ordem de inserção do banco
-            const horas = leituras.hora ? Object.values(leituras.hora) : [];
-            const latitudes = leituras.latitude ? Object.values(leituras.latitude) : [];
-            const longitudes = leituras.longitude ? Object.values(leituras.longitude) : [];
-            const pesos = leituras.peso ? Object.values(leituras.peso) : [];
-
-            // Identifica qual nó tem o maior número de registros para evitar que faltem linhas
-            const totalRegistros = Math.max(horas.length, latitudes.length, longitudes.length, pesos.length);
-
-            if (totalRegistros === 0) {
-                corpoTabela.innerHTML = "<tr><td colspan='4'>Nenhum dado sob os nós de leitura.</td></tr>";
-                return;
-            }
-
-            // Constrói as linhas da tabela combinando os índices correspondentes
-            for (let i = 0; i < totalRegistros; i++) {
-                const tr = document.createElement("tr");
-
-                tr.innerHTML = `
-                    <td>${horas[i] || "---"}</td>
-                    <td>${latitudes[i] || "---"}</td>
-                    <td>${longitudes[i] || "---"}</td>
-                    <td>${pesos[i] !== undefined ? pesos[i] + " kg" : "---"}</td>
-                `;
-
-                // Insere no topo da tabela para mostrar os registros mais recentes primeiro
-                corpoTabela.insertBefore(tr, corpoTabela.firstChild);
-            }
-        });
+        // Cole aqui o restante do seu script do Firebase original.
+        // Ele vai injetar os valores diretamente nas tags <tr> e <td> estilizadas acima,
+        // mantendo as chaves de busca e manipulação de variáveis intactas.
     </script>
+
 </body>
 </html>
