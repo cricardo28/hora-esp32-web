@@ -2,50 +2,22 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoramento de Animais - Realtime</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>Monitoramento de Animais - Histórico</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 20px;
-            color: #333;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
         h1 { color: #2c3e50; }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th { background-color: #34495e; color: white; }
-        tr:hover { background-color: #f1f1f1; }
-        .status {
-            font-weight: bold;
-            color: #27ae60;
-            margin-bottom: 15px;
-        }
+        .info { margin-bottom: 20px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f6f7; color: #34495e; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Histórico do Animal: <span id="nome-animal">id_animal_001</span></h1>
-    <div class="status" id="status-conexao">Conectando ao Firebase...</div>
+    <h1>Monitoramento de Animais - Realtime</h1>
+    <div class="info">Histórico do Animal: id_animal_001</div>
+    <div class="info" style="font-weight: normal;">Última atualização do banco: <span id="txtUltimoHorario">Carregando...</span></div>
 
     <table>
         <thead>
@@ -56,87 +28,74 @@
                 <th>Peso (kg)</th>
             </tr>
         </thead>
-        <tbody id="leituras">
-            <!-- Os dados do ESP32 vão aparecer aqui dentro automaticamente -->
+        <tbody id="tabela-corpo">
+            <tr>
+                <td colspan="4">Conectando ao Firebase...</td>
+            </tr>
         </tbody>
     </table>
-</div>
 
-<!-- 1. IMPORTAÇÃO DOS MÓDULOS DO FIREBASE (V9+) -->
-<script type="module">
-   // import { initializeApp } from "https://gstatic.com";
-    //import { getDatabase, ref, onValue } from "https://gstatic.com";
+    <script type="module">
+        // Importação dos módulos do Firebase SDK v10+
+        import { initializeApp } from "https://gstatic.com";
+        import { getDatabase, ref, onValue } from "https://gstatic.com";
 
-    // 2. CONFIGURAÇÃO DO SEU FIREBASE (Substitua pelos dados do seu projeto)
-    const firebaseConfig = {
-        apiKey: "uAJHpxPhOs8tGoih7TQXEbbpOYW7mnWsLUtNRcuG",
-        authDomain: "horaesp32.firebaseapp.com",
-        databaseURL: "https://horaesp32-404f2-default-rtdb.firebaseio.com/",
-        projectId: "horaesp32",
-        storageBucket: "horaesp32.appspot.com",
-        messagingSenderId: "SEU_SENDER_ID",
-        appId: "SEU_APP_ID"
-    /*
-        apiKey: "SUA_API_KEY_DO_FIREBASE",
-        authDomain: "://firebaseapp.com",
-        databaseURL: "https://firebaseio.com",
-        projectId: "SEU-PROJETO",
-        storageBucket: "://appspot.com",
-        messagingSenderId: "SEU_SENDER_ID",
-        appId: "SEU_APP_ID"*/
-    };
+        // Configuração do seu Firebase
+        const firebaseConfig = {
+            databaseURL: "https://horaesp32-404f2-default-rtdb.firebaseio.com"
+        };
 
-    // Inicializa o Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    // ID do animal que você quer monitorar nesta tela
-    const idAnimal = "id_animal_001"; 
+        // 1. Monitora o 'ultimo_horario' na raiz do banco
+        onValue(ref(db, 'ultimo_horario'), (snapshot) => {
+            document.getElementById("txtUltimoHorario").innerText = snapshot.val() || "Sem registros";
+        });
 
-    // 3. REFERÊNCIA AO CAMINHO DOS DADOS NO BANCO
-    const caminhoDados = ref(db, 'leituras/hora' + idAnimal);
-
-    // Elementos da página HTML
-    const tabela = document.getElementById('leituras');
-    const statusConexao = document.getElementById('status-conexao');
-
-    // 4. ESCUTAR DADOS EM TEMPO REAL
-    onValue(caminhoDados, (snapshot) => {
-        statusConexao.innerText = "Conectado. Sincronizando dados em tempo real...";
-        
-        // Limpa a tabela antes de listar para não duplicar linhas antigas
-        tabela.innerHTML = "";
-
-        if (snapshot.exists()) {
-            const dados = snapshot.val();
+        // 2. Monitora e renderiza todo o histórico de 'leituras'
+        onValue(ref(db, 'leituras'), (snapshot) => {
+            const leituras = snapshot.val();
+            const corpoTabela = document.getElementById("tabela-corpo");
             
-            // Transforma o objeto de registros em um array e inverte a ordem 
-            // para que o dado mais recente (último enviado) apareça no topo da tabela
-            const registrosOrdenados = Object.values(dados).reverse();
+            // Limpa a tabela antes de renderizar os novos dados em tempo real
+            corpoTabela.innerHTML = "";
 
-            registrosOrdenados.forEach((registro) => {
-                // Converte o Timestamp Unix de milissegundos para uma data legível em PT-BR
-                const dataFormatada = new Date(registro.timestamp).toLocaleString('pt-BR');
+            if (!leituras) {
+                corpoTabela.innerHTML = "<tr><td colspan='4'>Nenhum registro encontrado.</td></tr>";
+                return;
+            }
 
-                // Cria uma nova linha na tabela do HTML
-                const linha = `
-                    <tr>
-                        <td>${dataFormatada}</td>
-                        <td>${registro.latitude}</td>
-                        <td>${registro.longitude}</td>
-                        <td>${registro.peso.toFixed(2)} kg</td>
-                    </tr>
+            // Extrai as listas de valores mantendo a ordem de inserção do banco
+            const horas = leituras.hora ? Object.values(leituras.hora) : [];
+            const latitudes = leituras.latitude ? Object.values(leituras.latitude) : [];
+            const longitudes = leituras.longitude ? Object.values(leituras.longitude) : [];
+            const pesos = leituras.peso ? Object.values(leituras.peso) : [];
+
+            // Identifica qual nó tem o maior número de registros para evitar que faltem linhas
+            const totalRegistros = Math.max(horas.length, latitudes.length, longitudes.length, pesos.length);
+
+            if (totalRegistros === 0) {
+                corpoTabela.innerHTML = "<tr><td colspan='4'>Nenhum dado sob os nós de leitura.</td></tr>";
+                return;
+            }
+
+            // Constrói as linhas da tabela combinando os índices correspondentes
+            for (let i = 0; i < totalRegistros; i++) {
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>${horas[i] || "---"}</td>
+                    <td>${latitudes[i] || "---"}</td>
+                    <td>${longitudes[i] || "---"}</td>
+                    <td>${pesos[i] !== undefined ? pesos[i] + " kg" : "---"}</td>
                 `;
-                tabela.innerHTML += linha;
-            });
-        } else {
-            tabela.innerHTML = "<tr><td colspan='4'>Nenhum registro encontrado para este animal.</td></tr>";
-        }
-    }, (error) => {
-        statusConexao.innerText = "Erro ao carregar dados: " + error.message;
-        statusConexao.style.color = "#c0392b";
-    });
-</script>
 
+                // Insere no topo da tabela para mostrar os registros mais recentes primeiro
+                corpoTabela.insertBefore(tr, corpoTabela.firstChild);
+            }
+        });
+    </script>
 </body>
 </html>
