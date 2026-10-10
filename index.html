@@ -171,6 +171,8 @@
         const db = firebase.database();
         
         // Lê últimas 10 leituras
+        db.ref("leituras").limitToLast(10).on("value", (snapshot) => {
+        const lista = document.getElementById("leituras");
        // 1. Seleciona o corpo da tabela pelo ID "leituras"
 const tbody = document.getElementById("leituras");
 
@@ -204,8 +206,9 @@ db.ref("leituras").on("value", (snapshot) => {
       <td>${dado.peso ?? '-'}</td>
     `;
 
+    tbody.prepend(tr); // Adiciona no topo (início) da tabela
     // Adiciona a linha no final da tabela
-    tbody.appendChild(tr);
+    //tbody.appendChild(tr);
   });
 });
     </script>
