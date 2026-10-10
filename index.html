@@ -114,12 +114,6 @@
             border-bottom: none;
         }
 
-        /* Destaques de badges ou dados vazios */
-        .empty-cell {
-            color: var(--text-muted);
-            font-style: italic;
-        }
-        
         .loading-text {
             text-align: center;
             padding: 40px;
@@ -152,65 +146,81 @@
         </div>
     </div>
 
-    <!-- O seu script original com a lógica de dados entra logo abaixo -->
-    <script type="module">
-        // Cole aqui o restante do seu script do Firebase original.
-        // Ele vai injetar os valores diretamente nas tags <tr> e <td> estilizadas acima,
-        // mantendo as chaves de busca e manipulação de variáveis intactas.
+    <script>
         // Configuração do Firebase
         const firebaseConfig = {
-        apiKey: "uAJHpxPhOs8tGoih7TQXEbbpOYW7mnWsLUtNRcuG",
-        authDomain: "horaesp32.firebaseapp.com",
-        databaseURL: "https://horaesp32-404f2-default-rtdb.firebaseio.com/",
-        projectId: "horaesp32",
-        storageBucket: "horaesp32.appspot.com",
-        messagingSenderId: "xxxx",
-        appId: "xxxx"
+            apiKey: "uAJHpxPhOs8tGoih7TQXEbbpOYW7mnWsLUtNRcuG",
+            authDomain: "horaesp32.firebaseapp.com",
+            databaseURL: "https://horaesp32-404f2-default-rtdb.firebaseio.com/",
+            projectId: "horaesp32",
+            storageBucket: "horaesp32.appspot.com",
+            messagingSenderId: "xxxx",
+            appId: "xxxx"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        // Lê últimas 10 leituras
-        db.ref("leituras").limitToLast(10).on("value", (snapshot) => {
-        const lista = document.getElementById("leituras");
-       // 1. Seleciona o corpo da tabela pelo ID "leituras"
-const tbody = document.getElementById("leituras");
+        const tbody = document.getElementById("leituras");
 
-// 2. Escuta os dados do nó "leituras" no Firebase
-db.ref("leituras").on("value", (snapshot) => {
-  // Limpa o conteúdo atual da tabela (remove "Conectando..." ou leituras antigas)
-  tbody.innerHTML = "";
+        // Escuta as alterações no nó "leituras" em tempo real
+        db.ref("leituras").on("value", (snapshot) => {
+            tbody.innerHTML = "";
 
-  // Se não houver dados cadastrados
-  if (!snapshot.exists()) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="4" class="loading-text">Nenhum registro encontrado.</td>
-      </tr>
-    `;
-    return;
-  }
+            if (!snapshot.exists()) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="loading-text">Nenhum registro encontrado no banco de dados.</td>
+                    </tr>
+                `;
+                return;
+            }
 
-  // 3. Percorre cada item/registro dentro de "leituras"
-  snapshot.forEach((childSnapshot) => {
-    const dado = childSnapshot.val();
+            const dados = snapshot.val();
 
-    // Cria o elemento da linha <tr>
-    const tr = document.createElement("tr");
+            // CASO 1: Se o ESP32 envia registros com IDs gerados por push() ou chaves compostas
+            if (typeof Object.values(dados)[0] === 'object' && !('hora' in dados)) {
+                snapshot.forEach((childSnapshot) => {
+                    const dado = childSnapshot.val();
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${dado.hora ?? '-'}</td>
+                        <td>${dado.latitude ?? '-'}</td>
+                        <td>${dado.longitude ?? '-'}</td>
+                        <td>${dado.peso ?? '-'}</td>
+                    `;
+                    tbody.prepend(tr);
+                });
+            } 
+            // CASO 2: Estrutura em sub-nós paralelos (hora, latitude, longitude, peso)
+            else {
+                const chaves = dados.hora ? Object.keys(dados.hora) : [];
 
-    // Preenche as celulas <td> com os dados lidos
-    tr.innerHTML = `
-      <td>${dado.hora ?? '-'}</td>
-      <td>${dado.latitude ?? '-'}</td>
-      <td>${dado.longitude ?? '-'}</td>
-      <td>${dado.peso ?? '-'}</td>
-    `;
+                if (chaves.length === 0) {
+                    // Exibe a leitura direta se os valores forem simples/únicos
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${typeof dados.hora === 'object' ? '-' : (dados.hora ?? '-')}</td>
+                        <td>${typeof dados.latitude === 'object' ? '-' : (dados.latitude ?? '-')}</td>
+                        <td>${typeof dados.longitude === 'object' ? '-' : (dados.longitude ?? '-')}</td>
+                        <td>${typeof dados.peso === 'object' ? '-' : (dados.peso ?? '-')}</td>
+                    `;
+                    tbody.appendChild(tr);
+                    return;
+                }
 
-    tbody.prepend(tr); // Adiciona no topo (início) da tabela
-    // Adiciona a linha no final da tabela
-    //tbody.appendChild(tr);
-  });
-});
+                // Itera sobre as chaves dos registros encadeados
+                chaves.forEach((chave) => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${dados.hora ? (dados.hora[chave] ?? '-') : '-'}</td>
+                        <td>${dados.latitude ? (dados.latitude[chave] ?? '-') : '-'}</td>
+                        <td>${dados.longitude ? (dados.longitude[chave] ?? '-') : '-'}</td>
+                        <td>${dados.peso ? (dados.peso[chave] ?? '-') : '-'}</td>
+                    `;
+                    tbody.prepend(tr);
+                });
+            }
+        });
     </script>
 
 </body>
