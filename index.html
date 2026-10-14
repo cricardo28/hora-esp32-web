@@ -1,4 +1,152 @@
-<script type="module">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leituras ESP32 - Painel de Monitoramento</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        /* Estilização Geral e Cores Globais */
+        :root {
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --primary: #2c3e50;
+            --text-main: #333333;
+            --text-muted: #7f8c8d;
+            --border-color: #e9ecef;
+            --accent: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Container do Painel */
+        .dashboard-container {
+            width: 100%;
+            max-width: 1000px;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        /* Cabeçalho */
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+            font-size: 1.6rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 24px;
+            background-color: var(--accent);
+            border-radius: 4px;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+
+        /* Wrapper da Tabela para Rolagem Responsiva */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Estilização Avançada da Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            background-color: var(--bg-card);
+        }
+
+        th {
+            background-color: #fafbfc;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+
+        /* Efeitos visuais para linhas de dados */
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .loading-text {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h2>Últimas Leituras do ESP32</h2>
+        <p>Coordenadas e timestamp sincronizados em tempo real com o banco de dados.</p>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data / Hora</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Peso (kg)</th>
+                    </tr>
+                </thead>
+                <tbody id="leituras">
+                    <tr>
+                        <td colspan="4" class="loading-text">Conectando ao Firebase e carregando histórico...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+ <script type="module">
         // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "uAJHpxPhOs8tGoih7TQXEbbpOYW7mnWsLUtNRcuG",
@@ -57,3 +205,6 @@
             });
         });
     </script>
+
+</body>
+</html>
